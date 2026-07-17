@@ -1,0 +1,11 @@
+Route,Total_Shipments,Average_Lead_Time,Lead_Time_STD,Total_Sales,Total_Gross_Profit,Efficiency Score
+Secret Factory → Nebraska,1,906.0,,2.5,1.3,44.823386114494525
+Secret Factory → New Mexico,2,906.0,2.8284271247461903,12.5,6.5,44.823386114494525
+The Other Factory → Louisiana,1,907.0,,9.75,0.75,44.76248477466505
+The Other Factory → Connecticut,2,907.5,2.1213203435596424,9.75,0.75,44.732034104750305
+Wicked Choccy's → Maine,2,908.0,0.0,55.25,36.07,44.70158343483557
+Secret Factory → Mississippi,1,908.0,,80.0,40.0,44.70158343483557
+Secret Factory → Louisiana,2,908.5,0.7071067811865476,11.25,5.85,44.67113276492083
+Secret Factory → Minnesota,1,909.0,,5.0,2.6,44.64068209500609
+Secret Factory → Delaware,1,909.0,,60.0,30.0,44.64068209500609
+Secret Factory → South Carolina,1,909.0,,6.25,3.25,44.64068209500609

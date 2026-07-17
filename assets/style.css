@@ -1,0 +1,126 @@
+/* ---------- Main App ---------- */
+
+.stApp{
+    background:#0E1117;
+    color:white;
+}
+
+/* Sidebar */
+
+section[data-testid="stSidebar"]{
+    background:#161B22;
+}
+
+/* Headers */
+
+h1{
+    color:#4FC3F7;
+}
+
+h2{
+    color:white;
+}
+
+h3{
+    color:#4FC3F7;
+}
+
+/* Metric Cards */
+
+div[data-testid="metric-container"]{
+
+    background:#1F2937;
+
+    border-radius:15px;
+
+    padding:20px;
+
+    border:1px solid #2E8BFF;
+
+    box-shadow:0px 4px 15px rgba(0,0,0,0.4);
+
+}
+
+/* Tables */
+
+[data-testid="stDataFrame"]{
+
+    border-radius:15px;
+
+}
+
+/* Buttons */
+
+.stButton>button{
+
+    background:#2563EB;
+
+    color:white;
+
+    border-radius:12px;
+
+    border:none;
+
+    height:45px;
+
+}
+
+.stButton>button:hover{
+
+    background:#1D4ED8;
+
+}
+
+/* Download Buttons */
+
+.stDownloadButton>button{
+
+    background:#16A34A;
+
+    color:white;
+
+    border-radius:12px;
+
+}
+/* =========================================
+   SIDEBAR TEXT FIX
+========================================= */
+
+section[data-testid="stSidebar"] *{
+    color:white !important;
+}
+
+/* Page names */
+
+[data-testid="stSidebarNav"] a{
+    color:white !important;
+    font-size:18px !important;
+    font-weight:600 !important;
+    border-radius:12px;
+    margin-bottom:8px;
+}
+
+/* Hover */
+
+[data-testid="stSidebarNav"] a:hover{
+    background:#1f2937 !important;
+    color:#00E5FF !important;
+}
+
+/* Selected page */
+
+[data-testid="stSidebarNav"] a[aria-current="page"]{
+    background:#2563EB !important;
+    color:white !important;
+    font-weight:bold;
+}
+
+/* Sidebar headings */
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] label{
+    color:white !important;
+}
