@@ -152,31 +152,8 @@ color:#cbd5e1;
 
 """,unsafe_allow_html=True)
 
-# -------------------------------------------------
-# SIDEBAR
-# -------------------------------------------------
 
-with st.sidebar:
 
-    
-
-    st.markdown("## Nassau Candy")
-
-    st.markdown("### Logistics Analytics")
-
-    option_menu(
-
-        menu_title=None,
-
-        options=[
-            "Home"
-        ],
-
-        icons=["house-fill"],
-
-        default_index=0
-
-    )
 
 # -------------------------------------------------
 # HERO
