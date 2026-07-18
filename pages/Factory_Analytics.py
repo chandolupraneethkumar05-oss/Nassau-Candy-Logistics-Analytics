@@ -5,15 +5,7 @@ import plotly.graph_objects as go
 import folium
 from streamlit_folium import st_folium
 
-# =====================================================
-# PAGE CONFIG
-# =====================================================
 
-st.set_page_config(
-    page_title="Factory Analytics",
-    page_icon="🏭",
-    layout="wide"
-)
 
 # =====================================================
 # LOAD DATA

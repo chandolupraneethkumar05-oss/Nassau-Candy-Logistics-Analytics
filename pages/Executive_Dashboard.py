@@ -6,16 +6,7 @@ import folium
 from streamlit_folium import st_folium
 from datetime import datetime
 
-# ============================================================
-# PAGE CONFIGURATION
-# ============================================================
 
-st.set_page_config(
-    page_title="Executive Dashboard",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # ============================================================
 # CUSTOM CSS
