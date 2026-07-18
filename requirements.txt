@@ -1,9 +1,10 @@
 streamlit
+streamlit-option-menu
+streamlit-folium
 pandas
 numpy
 plotly
 folium
-streamlit-folium
-matplotlib
 openpyxl
 scikit-learn
+matplotlib
