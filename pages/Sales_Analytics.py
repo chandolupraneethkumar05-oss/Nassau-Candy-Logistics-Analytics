@@ -280,10 +280,18 @@ st.markdown("---")
 
 st.subheader("💡 Executive Sales Insights")
 
+if filtered.empty:
+    st.warning("No data available for the selected filters.")
+    st.stop()
+
 best_region = filtered.groupby("Region")["Sales"].sum().idxmax()
 best_factory = filtered.groupby("Factory")["Sales"].sum().idxmax()
 best_product = filtered.groupby("Product Name")["Sales"].sum().idxmax()
-
+filtered = df[
+    (df["Region"].isin(selected_regions)) &
+    (df["Factory"].isin(selected_factories)) &
+    (df["Ship Mode"].isin(selected_ship))
+]
 c1, c2, c3 = st.columns(3)
 
 with c1:
