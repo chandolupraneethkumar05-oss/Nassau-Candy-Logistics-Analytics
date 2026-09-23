@@ -1,41 +1,36 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
+from src.theme import apply_theme
+from src.data_loader import load_clean_data
+from src.config import COLORS
 
+# Apply natural corporate styling
+apply_theme()
 
-# =====================================================
-# LOAD DATA
-# =====================================================
-
-@st.cache_data
-def load_data():
-    df = pd.read_csv("data/cleaned_dataset.csv")
-    df["Order Date"] = pd.to_datetime(df["Order Date"])
-    df["Ship Date"] = pd.to_datetime(df["Ship Date"])
-    return df
-
-df = load_data()
+# Load clean dataset
+df = load_clean_data()
 
 # =====================================================
-# PAGE TITLE
+# PAGE HEADER
 # =====================================================
 
-st.title("💰 Sales Analytics Dashboard")
-
-st.caption("Complete Sales Performance Analysis")
-
-st.markdown("---")
-
+st.markdown("""
+<div class="executive-header">
+    <h1>💰 Commercial & Sales Analytics</h1>
+    <p>Product Portfolio Profitability • Regional Demand Distribution • Service Tier Performance</p>
+</div>
+""", unsafe_allow_html=True)
 
 # =====================================================
 # SIDEBAR FILTERS
 # =====================================================
 
-st.sidebar.header("Sales Filters")
+st.sidebar.markdown("### 🔍 Commercial Filters")
 
 regions = sorted(df["Region"].unique())
-
 selected_regions = st.sidebar.multiselect(
     "Region",
     regions,
@@ -43,329 +38,305 @@ selected_regions = st.sidebar.multiselect(
 )
 
 factories = sorted(df["Factory"].unique())
-
 selected_factories = st.sidebar.multiselect(
-    "Factory",
+    "Manufacturing Plant",
     factories,
     default=factories
 )
 
 ship_modes = sorted(df["Ship Mode"].unique())
-
 selected_ship = st.sidebar.multiselect(
-    "Ship Mode",
+    "Shipping Service Tier",
     ship_modes,
     default=ship_modes
 )
 
+# Apply filters
 filtered = df[
     (df["Region"].isin(selected_regions)) &
     (df["Factory"].isin(selected_factories)) &
     (df["Ship Mode"].isin(selected_ship))
 ]
 
+if filtered.empty:
+    st.warning("No records match the current filter selection.")
+    st.stop()
 
 # =====================================================
-# KPI CARDS
+# KPI SUMMARY CARDS
 # =====================================================
 
-sales = filtered["Sales"].sum()
-profit = filtered["Gross Profit"].sum()
-orders = len(filtered)
-avg_sale = filtered["Sales"].mean()
+total_sales = filtered["Sales"].sum()
+total_profit = filtered["Gross Profit"].sum()
+total_orders = len(filtered)
+avg_order_val = filtered["Sales"].mean()
+gross_margin = (total_profit / total_sales * 100) if total_sales > 0 else 0.0
 
 c1, c2, c3, c4 = st.columns(4)
 
-c1.metric("💰 Total Sales", f"${sales:,.0f}")
-c2.metric("💵 Gross Profit", f"${profit:,.0f}")
-c3.metric("📦 Orders", f"{orders:,}")
-c4.metric("🛒 Avg Order", f"${avg_sale:,.2f}")
+with c1:
+    st.metric("Total Revenue", f"${total_sales:,.0f}")
+
+with c2:
+    st.metric("Gross Profit", f"${total_profit:,.0f}")
+
+with c3:
+    st.metric("Gross Margin", f"{gross_margin:.1f}%")
+
+with c4:
+    st.metric("Average Order Value", f"${avg_order_val:.2f}")
 
 st.markdown("---")
 
-
-st.markdown("""
-<div style="
-background:linear-gradient(90deg,#0f2027,#203a43,#2c5364);
-padding:18px;
-border-radius:15px;
-color:white;
-margin-bottom:20px;
-">
-<h2>📈 Executive Sales Summary</h2>
-
-This dashboard provides a complete view of sales performance across factories,
-regions and shipping modes. Use the filters to identify high-performing
-markets, profitable factories and sales trends.
-
-</div>
-""", unsafe_allow_html=True)
-
-
 # =====================================================
-# MONTHLY SALES TREND
+# MONTHLY SALES TREND (FIXED TITLE & AXES BUG)
 # =====================================================
 
-st.subheader("📈 Monthly Sales Trend")
+st.markdown("### 📈 Monthly Sales Revenue Trend")
 
 monthly = (
-    filtered.groupby(filtered["Order Date"].dt.to_period("M"))["Sales"]
-    .sum()
+    filtered.groupby(filtered["Order Date"].dt.to_period("M"))
+    .agg(Sales=("Sales", "sum"), Profit=("Gross Profit", "sum"))
     .reset_index()
 )
+monthly["Order Month"] = monthly["Order Date"].astype(str)
 
-monthly["Order Date"] = monthly["Order Date"].astype(str)
-
-fig = px.line(
+fig_monthly = px.line(
     monthly,
-    x="Order Date",
+    x="Order Month",
     y="Sales",
     markers=True,
-    template="plotly_dark",
-    color_discrete_sequence=["cyan"]
+    template="plotly_white",
+    color_discrete_sequence=[COLORS["primary"]]
 )
 
-fig.update_layout(
-    height=500,
-    title="🏭 Factory-wise Sales Performance",
-    title_x=0.5,
-    xaxis_title="Factory",
-    yaxis_title="Sales ($)"
+fig_monthly.update_traces(line=dict(width=3), marker=dict(size=7))
+fig_monthly.update_layout(
+    height=400,
+    title="Monthly Revenue Trend (2024 - 2025)",
+    xaxis_title="Order Month",
+    yaxis_title="Gross Sales ($)",
+    margin=dict(l=40, r=30, t=40, b=40)
 )
 
-
-st.plotly_chart(fig, use_container_width=True)
-
+st.plotly_chart(fig_monthly, use_container_width=True)
 
 st.markdown("---")
+
+# =====================================================
+# REGIONAL BREAKDOWN & SHIPPING MODE DISTRIBUTION
+# =====================================================
 
 left, right = st.columns(2)
 
 with left:
-
+    st.markdown("### 🌍 Regional Sales Contribution")
     region_sales = (
         filtered.groupby("Region")["Sales"]
         .sum()
         .reset_index()
+        .sort_values("Sales", ascending=False)
     )
 
-    fig = px.bar(
+    fig_reg = px.bar(
         region_sales,
         x="Region",
         y="Sales",
+        text_auto="$,.0f",
         color="Sales",
-        template="plotly_dark",
-        title="Sales by Region"
+        color_continuous_scale=[[0, "#93C5FD"], [1, COLORS["primary"]]],
+        template="plotly_white"
     )
-
-    st.plotly_chart(fig, use_container_width=True)
+    fig_reg.update_layout(height=380, coloraxis_showscale=False)
+    st.plotly_chart(fig_reg, use_container_width=True)
 
 with right:
-
-    ship = (
+    st.markdown("### 📦 Order Volume by Shipping Mode")
+    ship_data = (
         filtered["Ship Mode"]
         .value_counts()
         .reset_index()
     )
+    ship_data.columns = ["Ship Mode", "Orders"]
 
-    ship.columns = ["Ship Mode", "Orders"]
-
-    fig = px.pie(
-        ship,
+    fig_pie = px.pie(
+        ship_data,
         names="Ship Mode",
         values="Orders",
-        hole=.55,
-        template="plotly_dark",
-        title="Orders by Ship Mode"
+        hole=0.55,
+        color_discrete_sequence=COLORS["chart_palette"],
+        template="plotly_white"
+    )
+    fig_pie.update_traces(textinfo="percent+label")
+    fig_pie.update_layout(height=380, margin=dict(l=20, r=20, t=30, b=20))
+    st.plotly_chart(fig_pie, use_container_width=True)
+
+st.markdown("---")
+
+# =====================================================
+# TOP SELLING PRODUCTS & SALES BY FACTORY
+# =====================================================
+
+col_prod, col_fac = st.columns([3, 2])
+
+with col_prod:
+    st.markdown("### 🏆 Top 10 Revenue Generating Products")
+    top_products = (
+        filtered.groupby("Product Name")
+        .agg(Sales=("Sales", "sum"), Profit=("Gross Profit", "sum"), Units=("Units", "sum"))
+        .sort_values("Sales", ascending=False)
+        .head(10)
+        .reset_index()
     )
 
-    st.plotly_chart(fig, use_container_width=True)
-    
-st.markdown("---")
-st.subheader("🏭 Sales by Factory")
+    fig_top_prod = px.bar(
+        top_products,
+        x="Sales",
+        y="Product Name",
+        orientation="h",
+        color="Profit",
+        color_continuous_scale=[[0, "#A7F3D0"], [1, COLORS["accent_green"]]],
+        text_auto="$,.0f",
+        template="plotly_white"
+    )
+    fig_top_prod.update_layout(
+        height=450,
+        yaxis={"categoryorder": "total ascending"},
+        xaxis_title="Sales ($)",
+        yaxis_title="Product",
+        coloraxis_colorbar=dict(title="Profit ($)")
+    )
+    st.plotly_chart(fig_top_prod, use_container_width=True)
 
-factory_sales = (
-    filtered.groupby("Factory")["Sales"]
-    .sum()
-    .sort_values(ascending=False)
-    .reset_index()
-)
+with col_fac:
+    st.markdown("### 🏭 Revenue by Origin Factory")
+    fac_sales = (
+        filtered.groupby("Factory")["Sales"]
+        .sum()
+        .sort_values(ascending=False)
+        .reset_index()
+    )
 
-fig = px.bar(
-    factory_sales,
-    x="Factory",
-    y="Sales",
-    color="Sales",
-    template="plotly_dark",
-    text_auto=".2s"
-)
-
-fig.update_layout(height=500)
-
-st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("---")
-st.subheader("🏆 Top 10 Selling Products")
-
-top_products = (
-    filtered.groupby("Product Name")["Sales"]
-    .sum()
-    .sort_values(ascending=False)
-    .head(10)
-    .reset_index()
-)
-
-fig = px.bar(
-    top_products,
-    x="Sales",
-    y="Product Name",
-    orientation="h",
-    color="Sales",
-    template="plotly_dark",
-    text_auto=".2s"
-)
-
-fig.update_layout(
-    height=600,
-    title="🏆 Top 10 Selling Products",
-    title_x=0.5,
-    xaxis_title="Sales ($)",
-    yaxis_title="Products",
-    yaxis={"categoryorder": "total ascending"}
-)
-
-fig.update_traces(textposition="outside")
-st.plotly_chart(fig, use_container_width=True)
-
+    fig_fac = px.bar(
+        fac_sales,
+        x="Factory",
+        y="Sales",
+        text_auto="$,.0f",
+        color_discrete_sequence=[COLORS["secondary"]],
+        template="plotly_white"
+    )
+    fig_fac.update_layout(
+        height=450,
+        xaxis_title="Manufacturing Plant",
+        yaxis_title="Revenue ($)"
+    )
+    st.plotly_chart(fig_fac, use_container_width=True)
 
 st.markdown("---")
-st.subheader("📊 Sales vs Gross Profit")
 
-fig = px.scatter(
+# =====================================================
+# SAFE SCATTER PLOT: SALES VS GROSS PROFIT
+# =====================================================
+
+st.markdown("### 📊 Order Value vs. Gross Profit Correlation")
+
+# Safe bubble sizing by Units rather than possibly negative profit
+fig_scatter = px.scatter(
     filtered,
     x="Sales",
     y="Gross Profit",
     color="Region",
-    size="Gross Profit",
-    hover_data=["Factory", "State/Province"],
-    template="plotly_dark"
+    size="Units",
+    hover_data=["Product Name", "Factory", "State/Province"],
+    color_discrete_sequence=COLORS["chart_palette"],
+    template="plotly_white"
 )
 
-fig.update_layout(height=600)
-
-st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("---")
-st.subheader("📅 Monthly Orders")
-
-monthly_orders = (
-    filtered.groupby(filtered["Order Date"].dt.to_period("M"))
-    .size()
-    .reset_index(name="Orders")
+fig_scatter.update_layout(
+    height=450,
+    xaxis_title="Order Sales ($)",
+    yaxis_title="Gross Profit ($)",
+    margin=dict(l=40, r=30, t=30, b=40)
 )
-
-monthly_orders["Order Date"] = monthly_orders["Order Date"].astype(str)
-
-fig = px.area(
-    monthly_orders,
-    x="Order Date",
-    y="Orders",
-    template="plotly_dark"
-)
-
-fig.update_layout(height=500)
-
-st.plotly_chart(fig, use_container_width=True)
-st.markdown("---")
-
-st.subheader("💡 Executive Sales Insights")
-
-if filtered.empty:
-    st.warning("No data available for the selected filters.")
-    st.stop()
-
-best_region = filtered.groupby("Region")["Sales"].sum().idxmax()
-best_factory = filtered.groupby("Factory")["Sales"].sum().idxmax()
-best_product = filtered.groupby("Product Name")["Sales"].sum().idxmax()
-filtered = df[
-    (df["Region"].isin(selected_regions)) &
-    (df["Factory"].isin(selected_factories)) &
-    (df["Ship Mode"].isin(selected_ship))
-]
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    st.success(f"""
-### 🌎 Best Sales Region
-
-**{best_region}**
-""")
-
-with c2:
-    st.success(f"""
-### 🏭 Best Performing Factory
-
-**{best_factory}**
-""")
-
-with c3:
-    st.success(f"""
-### 🏆 Best Selling Product
-
-**{best_product}**
-""")
-
+st.plotly_chart(fig_scatter, use_container_width=True)
 
 st.markdown("---")
-st.subheader("📋 Sales Summary")
 
-summary = (
-    filtered.groupby("Region")
-    .agg(
-        Total_Sales=("Sales", "sum"),
-        Profit=("Gross Profit", "sum"),
-        Orders=("Order ID", "count"),
-        Avg_Order=("Sales", "mean")
+# =====================================================
+# MEANINGFUL COMMERCIAL GAUGE: GROSS MARGIN %
+# =====================================================
+
+col_g1, col_g2 = st.columns([1, 2])
+
+with col_g1:
+    st.markdown("### 🎯 Portfolio Margin Health")
+    fig_margin_gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=round(gross_margin, 1),
+        number={"suffix": "%"},
+        title={"text": "Gross Margin %"},
+        gauge={
+            "axis": {"range": [0, 100]},
+            "bar": {"color": COLORS["accent_green"]},
+            "steps": [
+                {"range": [0, 40], "color": "#FEE2E2"},
+                {"range": [40, 60], "color": "#FEF3C7"},
+                {"range": [60, 100], "color": "#DCFCE7"}
+            ],
+            "threshold": {
+                "line": {"color": "#1E3A8A", "width": 3},
+                "thickness": 0.75,
+                "value": 60.0
+            }
+        }
+    ))
+    fig_margin_gauge.update_layout(
+        template="plotly_white",
+        height=320,
+        margin=dict(l=20, r=20, t=30, b=20)
     )
-    .reset_index()
-)
+    st.plotly_chart(fig_margin_gauge, use_container_width=True)
 
-st.dataframe(summary, use_container_width=True)
+with col_g2:
+    st.markdown("### 📋 Regional Commercial Summary Table")
+    reg_summary = (
+        filtered.groupby("Region")
+        .agg(
+            Orders=("Order ID", "count"),
+            Total_Sales=("Sales", "sum"),
+            Total_Profit=("Gross Profit", "sum"),
+            Avg_Order_Value=("Sales", "mean")
+        )
+        .reset_index()
+    )
+    reg_summary["Gross Margin %"] = (
+        reg_summary["Total_Profit"] / reg_summary["Total_Sales"] * 100
+    ).round(1)
 
+    reg_summary_display = reg_summary.rename(columns={
+        "Total_Sales": "Revenue ($)",
+        "Total_Profit": "Profit ($)",
+        "Avg_Order_Value": "Avg Order ($)"
+    })
+
+    st.dataframe(
+        reg_summary_display.style.format({
+            "Revenue ($)": "${:,.0f}",
+            "Profit ($)": "${:,.0f}",
+            "Avg Order ($)": "${:,.2f}",
+            "Gross Margin %": "{:.1f}%",
+            "Orders": "{:,}"
+        }),
+        use_container_width=True,
+        hide_index=True
+    )
+
+# Export Sales Report
 st.markdown("---")
-
-import plotly.graph_objects as go
-
-st.markdown("---")
-st.subheader("🎯 Overall Sales Performance")
-
-sales_score = min((sales / df["Sales"].sum()) * 100, 100)
-
-fig = go.Figure(go.Indicator(
-    mode="gauge+number",
-    value=sales_score,
-    number={"suffix": "%"},
-    title={"text": "Sales Performance Score"},
-    gauge={
-        "axis": {"range": [0, 100]},
-        "bar": {"color": "#00E5FF"},
-        "steps": [
-            {"range": [0, 40], "color": "#ef4444"},
-            {"range": [40, 70], "color": "#f59e0b"},
-            {"range": [70, 100], "color": "#22c55e"}
-        ]
-    }
-))
-
-fig.update_layout(height=420)
-
-st.plotly_chart(fig, use_container_width=True)
-
-csv = filtered.to_csv(index=False)
-
+sales_csv = filtered.to_csv(index=False)
 st.download_button(
-    "⬇ Download Sales Report",
-    csv,
-    "Sales_Report.csv",
+    "📥 Download Filtered Sales Report (CSV)",
+    sales_csv,
+    "nassau_candy_sales_report.csv",
     "text/csv"
 )

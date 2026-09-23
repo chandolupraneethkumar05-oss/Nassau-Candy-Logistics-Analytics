@@ -134,31 +134,37 @@ Provides factory-wise analysis:
 
 ---
 
-## 5️⃣ Business Insights
+## 5️⃣ Predictive Logistics (Machine Learning)
 
-Provides executive-level insights:
+Leverages **Scikit-Learn** predictive pipelines:
 
-- Executive KPIs
-- Best Region
-- Best Factory
-- Fastest Factory
-- Business Recommendations
-- Management Summary
-- Executive Report Download
+- Random Forest Regressor for Delivery Lead Time
+- Gradient Boosting Classifier for On-Time SLA Delay Risk
+- Interactive "What-If" Shipment Simulator
+- Feature Importance and Lead Time Driver Analysis
+
+---
+
+## 6️⃣ Strategic Business Insights
+
+Provides dynamic executive-level decision support:
+
+- Dynamic Operational Observations (Condition-Triggered)
+- Balanced Supply Chain Health Index (0-100)
+- Plant Dispatch Bottleneck Diagnostics
+- Regional Margin Opportunities
+- Executive Scorecard Download
 
 ---
 
 # 📈 Key Features
 
-- Interactive Streamlit Dashboard
-- Dynamic Filters
-- KPI Cards
-- Interactive Charts
-- Route Analysis
-- Factory Map
-- Business Insights
-- CSV Report Download
-- Responsive Dashboard
+- **Natural Corporate Theme:** Human-designed executive palette (warm slate, deep navy, forest green, warm amber) replacing AI-like neon styling.
+- **Realistic Supply Chain Modeling:** Segregated plant dispatch handling (0–5 days) from carrier transit duration (1–6 days) with geodesic Haversine distance calculations.
+- **Standardized Route Efficiency Index (REI):** Normalized, volume-weighted scoring combining operational velocity, gross margin %, and on-time compliance ($N \ge 5$ threshold).
+- **Interactive Predictive Simulator:** Real-time ML inference for hypothetical orders.
+- **Multi-Page Navigation:** Built with native Streamlit navigation.
+- **Dynamic Cross-Filtering:** Interactive sidebar controls across all analytics modules.
 
 ---
 
@@ -167,31 +173,43 @@ Provides executive-level insights:
 ```
 Nassau_Candy_Project/
 │
-├── app.py
-├── analysis.py
-├── module4_visualization.py
-├── requirements.txt
-├── README.md
+├── app.py                              # Streamlit application entrypoint & navigation
+├── requirements.txt                    # Project dependencies
+├── README.md                           # Documentation
 │
 ├── assets/
-│   └── style.css
+│   └── style.css                       # Natural corporate styling
 │
-├── charts/
+├── src/                                # Core modular Python package
+│   ├── __init__.py
+│   ├── config.py                       # Coordinates, constants, corporate color tokens
+│   ├── data_loader.py                  # Cached data loading & schema normalization
+│   ├── logistics.py                    # Haversine distance, REI score, dynamic observations
+│   ├── ml_model.py                     # Scikit-learn Random Forest & GBDT ML pipelines
+│   └── theme.py                        # Natural corporate CSS & accessible Plotly theme
 │
 ├── data/
-│   ├── Nassau Candy Distributor.csv
-│   └── cleaned_dataset.csv
-│
-├── output/
+│   ├── Nassau Candy Distributor.csv    # Source raw shipment transactions
+│   └── cleaned_dataset.csv             # Cleaned dataset with realistic lead times & distances
 │
 ├── pages/
-│   ├── 1_Executive_Dashboard.py
-│   ├── 2_Sales_Analytics.py
-│   ├── 3_Route_Analytics.py
-│   ├── 4_Factory_Analytics.py
-│   └── 5_Business_Insights.py
+│   ├── Home.py                         # Executive portal & architecture
+│   ├── Executive_Dashboard.py          # Unified KPI cards, OTIF gauge, route rankings
+│   ├── Route_Analytics.py              # Corridor velocity, REI rankings, distance metrics
+│   ├── Factory_Analytics.py            # Plant capacity, dispatch delay, fulfillment SLA
+│   ├── Sales_Analytics.py              # Product margin, monthly trend, sales distribution
+│   ├── Predictive_Analytics.py         # ML shipment lead time & delay risk simulator
+│   └── Business_Insights.py            # Strategic scorecard & dynamic observations
 │
-└── requirements.txt
+├── scripts/
+│   ├── clean_data.py                   # Deterministic data cleaning & feature engineering
+│   ├── analysis.py                     # Standardized route aggregation & REI calculation
+│   ├── module4_visualization.py        # Natural corporate chart generation pipeline
+│   ├── check_columns.py                # Schema inspection tool
+│   └── check_dates.py                  # Date validation & lead time verification tool
+│
+├── charts/                             # High-resolution executive PNG charts
+└── output/                             # Generated route summaries & top/bottom corridors
 ```
 
 ---

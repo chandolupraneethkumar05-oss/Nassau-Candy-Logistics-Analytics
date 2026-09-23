@@ -1,126 +1,107 @@
-/* ---------- Main App ---------- */
+/* Nassau Candy Logistics Analytics - Natural Corporate Style */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-.stApp{
-    background:#0E1117;
-    color:white;
+html, body, [class*="css"], [class*="st-"] {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Sidebar */
-
-section[data-testid="stSidebar"]{
-    background:#161B22;
+.stApp {
+    background-color: #F8FAFC;
+    color: #0F172A;
 }
 
-/* Headers */
-
-h1{
-    color:#4FC3F7;
+/* Header Container */
+.executive-header {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 24px 30px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
-h2{
-    color:white;
+.executive-header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1E3A8A;
+    margin: 0;
+    letter-spacing: -0.02em;
 }
 
-h3{
-    color:#4FC3F7;
+.executive-header p {
+    font-size: 14px;
+    color: #64748B;
+    margin: 6px 0 0 0;
 }
 
-/* Metric Cards */
-
-div[data-testid="metric-container"]{
-
-    background:#1F2937;
-
-    border-radius:15px;
-
-    padding:20px;
-
-    border:1px solid #2E8BFF;
-
-    box-shadow:0px 4px 15px rgba(0,0,0,0.4);
-
+/* Card Styling */
+.card-container {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Tables */
-
-[data-testid="stDataFrame"]{
-
-    border-radius:15px;
-
+.card-container:hover {
+    border-color: #CBD5E1;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
-/* Buttons */
-
-.stButton>button{
-
-    background:#2563EB;
-
-    color:white;
-
-    border-radius:12px;
-
-    border:none;
-
-    height:45px;
-
+.card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
 }
 
-.stButton>button:hover{
-
-    background:#1D4ED8;
-
+/* Clean Alert Boxes */
+.alert-box {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
-/* Download Buttons */
-
-.stDownloadButton>button{
-
-    background:#16A34A;
-
-    color:white;
-
-    border-radius:12px;
-
-}
-/* =========================================
-   SIDEBAR TEXT FIX
-========================================= */
-
-section[data-testid="stSidebar"] *{
-    color:white !important;
+.alert-box.success {
+    background-color: #F0FDF4;
+    border-left: 4px solid #15803D;
+    color: #14532D;
 }
 
-/* Page names */
-
-[data-testid="stSidebarNav"] a{
-    color:white !important;
-    font-size:18px !important;
-    font-weight:600 !important;
-    border-radius:12px;
-    margin-bottom:8px;
+.alert-box.warning {
+    background-color: #FFFBEB;
+    border-left: 4px solid #D97706;
+    color: #78350F;
 }
 
-/* Hover */
-
-[data-testid="stSidebarNav"] a:hover{
-    background:#1f2937 !important;
-    color:#00E5FF !important;
+.alert-box.info {
+    background-color: #EFF6FF;
+    border-left: 4px solid #2563EB;
+    color: #1E3A8A;
 }
 
-/* Selected page */
-
-[data-testid="stSidebarNav"] a[aria-current="page"]{
-    background:#2563EB !important;
-    color:white !important;
-    font-weight:bold;
+.alert-box.danger {
+    background-color: #FEF2F2;
+    border-left: 4px solid #B91C1C;
+    color: #7F1D1D;
 }
 
-/* Sidebar headings */
+/* Streamlit Component Adjustments */
+section[data-testid="stSidebar"] {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #E2E8F0;
+}
 
-[data-testid="stSidebar"] h1,
-[data-testid="stSidebar"] h2,
-[data-testid="stSidebar"] h3,
-[data-testid="stSidebar"] p,
-[data-testid="stSidebar"] label{
-    color:white !important;
+div[data-testid="stMetric"] {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }

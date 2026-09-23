@@ -5,288 +5,273 @@ import plotly.graph_objects as go
 import folium
 from streamlit_folium import st_folium
 
+from src.theme import apply_theme
+from src.data_loader import load_clean_data
+from src.config import COLORS
 
+# Apply natural corporate styling
+apply_theme()
+
+# Load clean dataset
+df = load_clean_data()
 
 # =====================================================
-# LOAD DATA
+# PAGE HEADER
 # =====================================================
 
-@st.cache_data
-def load_data():
-    df = pd.read_csv("data/cleaned_dataset.csv")
-    df["Order Date"] = pd.to_datetime(df["Order Date"])
-    df["Ship Date"] = pd.to_datetime(df["Ship Date"])
-    return df
+st.markdown("""
+<div class="executive-header">
+    <h1>🏭 Factory Performance & Plant Analytics</h1>
+    <p>Plant Output Capacity • Order Fulfillment Delay • Geographic Service Reach</p>
+</div>
+""", unsafe_allow_html=True)
 
-df = load_data()
+# =====================================================
+# SIDEBAR FILTERS
+# =====================================================
 
-st.title("🏭 Factory Analytics Dashboard")
-st.caption("Factory Performance & Productivity Analysis")
+st.sidebar.markdown("### 🔍 Plant Filters")
 
-st.markdown("---")
-
-
-st.sidebar.header("Factory Filters")
-
-factory = st.sidebar.multiselect(
-    "Factory",
-    sorted(df["Factory"].unique()),
-    default=sorted(df["Factory"].unique())
+factories = sorted(df["Factory"].unique())
+selected_factories = st.sidebar.multiselect(
+    "Manufacturing Plant",
+    factories,
+    default=factories
 )
 
-region = st.sidebar.multiselect(
-    "Region",
-    sorted(df["Region"].unique()),
-    default=sorted(df["Region"].unique())
+regions = sorted(df["Region"].unique())
+selected_regions = st.sidebar.multiselect(
+    "Destination Region",
+    regions,
+    default=regions
 )
 
 filtered = df[
-    (df["Factory"].isin(factory)) &
-    (df["Region"].isin(region))
+    (df["Factory"].isin(selected_factories)) &
+    (df["Region"].isin(selected_regions))
 ]
 
+if filtered.empty:
+    st.warning("No records match the current filter selection.")
+    st.stop()
 
-sales = filtered["Sales"].sum()
-profit = filtered["Gross Profit"].sum()
-lead = filtered["Lead Time"].mean()
-factories = filtered["Factory"].nunique()
+# =====================================================
+# FACTORY SUMMARY KPIs
+# =====================================================
 
-c1,c2,c3,c4 = st.columns(4)
+total_orders = len(filtered)
+total_sales = filtered["Sales"].sum()
+total_profit = filtered["Gross Profit"].sum()
+avg_dispatch_days = filtered["Fulfillment Days"].mean()
+plant_on_time_pct = (filtered["On Time"].mean() * 100)
 
-c1.metric("🏭 Factories", factories)
-c2.metric("💰 Sales", f"${sales:,.0f}")
-c3.metric("💵 Profit", f"${profit:,.0f}")
-c4.metric("🚚 Avg Lead Time", f"{lead:.2f}")
+k1, k2, k3, k4 = st.columns(4)
 
+with k1:
+    st.metric("Active Plants", f"{filtered['Factory'].nunique()} / 5")
+
+with k2:
+    st.metric("Total Production Sales", f"${total_sales:,.0f}")
+
+with k3:
+    st.metric("Avg Dispatch Delay", f"{avg_dispatch_days:.1f} Days", delta="Order-to-Ship Handling", delta_color="off")
+
+with k4:
+    st.metric("Fulfillment On-Time Rate", f"{plant_on_time_pct:.1f}%", delta="Target: 85%", delta_color="normal" if plant_on_time_pct >= 85 else "inverse")
 
 st.markdown("---")
+
+# =====================================================
+# FACTORY PERFORMANCE SUMMARY TABLE
+# =====================================================
+
+st.markdown("### 📋 Manufacturing Facility Performance Summary")
 
 factory_summary = (
     filtered.groupby("Factory")
     .agg(
-        Orders=("Order ID","count"),
-        Sales=("Sales","sum"),
-        Profit=("Gross Profit","sum"),
-        Avg_Lead_Time=("Lead Time","mean")
+        Orders=("Order ID", "count"),
+        Units=("Units", "sum"),
+        Sales=("Sales", "sum"),
+        Profit=("Gross Profit", "sum"),
+        Avg_Fulfillment_Days=("Fulfillment Days", "mean"),
+        Avg_Transit_Days=("Transit Days", "mean"),
+        Avg_Total_Lead=("Total Lead Time", "mean"),
+        Avg_Distance=("Distance Miles", "mean"),
+        On_Time_Pct=("On Time", "mean")
     )
     .reset_index()
 )
 
-st.subheader("📋 Factory Performance Summary")
+factory_summary["Margin %"] = (factory_summary["Profit"] / factory_summary["Sales"] * 100).round(1)
+factory_summary["On_Time_Pct"] = (factory_summary["On_Time_Pct"] * 100).round(1)
 
 st.dataframe(
-    factory_summary,
-    use_container_width=True
+    factory_summary.rename(columns={
+        "Avg_Fulfillment_Days": "Dispatch Delay (D)",
+        "Avg_Transit_Days": "Transit Duration (D)",
+        "Avg_Total_Lead": "Total Lead Time (D)",
+        "Avg_Distance": "Avg Reach (Mi)",
+        "On_Time_Pct": "On-Time Compliance"
+    }).style.format({
+        "Orders": "{:,}",
+        "Units": "{:,}",
+        "Sales": "${:,.0f}",
+        "Profit": "${:,.0f}",
+        "Dispatch Delay (D)": "{:.1f}",
+        "Transit Duration (D)": "{:.1f}",
+        "Total Lead Time (D)": "{:.1f}",
+        "Avg Reach (Mi)": "{:,.0f}",
+        "Margin %": "{:.1f}%",
+        "On-Time Compliance": "{:.1f}%"
+    }),
+    use_container_width=True,
+    hide_index=True
 )
-
 
 st.markdown("---")
 
-st.subheader("💰 Sales by Factory")
+# =====================================================
+# FACTORY COMPARISONS: SALES, PROFIT, AND DISPATCH TIME
+# =====================================================
 
-fig = px.bar(
-    factory_summary,
-    x="Factory",
-    y="Sales",
-    color="Sales",
-    text_auto=".2s",
-    template="plotly_dark"
-)
-fig.update_layout(
-    height=500,
-    title="🏭 Factory-wise Sales Performance",
-    title_x=0.5,
-    xaxis_title="Factory",
-    yaxis_title="Sales ($)"
-)
+col_f1, col_f2 = st.columns(2)
 
-st.plotly_chart(fig, use_container_width=True)
+with col_f1:
+    st.markdown("### 💰 Commercial Output by Factory")
+    fig_fac_sales = px.bar(
+        factory_summary.sort_values("Sales", ascending=False),
+        x="Factory",
+        y=["Sales", "Profit"],
+        barmode="group",
+        color_discrete_sequence=[COLORS["primary"], COLORS["accent_green"]],
+        text_auto="$,.0f",
+        template="plotly_white"
+    )
+    fig_fac_sales.update_layout(height=400, yaxis_title="Amount ($)", xaxis_title="Factory")
+    st.plotly_chart(fig_fac_sales, use_container_width=True)
 
-
-st.markdown("---")
-
-st.subheader("📈 Profit by Factory")
-
-fig = px.bar(
-    factory_summary,
-    x="Factory",
-    y="Profit",
-    color="Profit",
-    text_auto=".2s",
-    template="plotly_dark"
-)
-fig.update_layout(
-    height=500,
-    title="💰 Factory Profit Comparison",
-    title_x=0.5,
-    xaxis_title="Factory",
-    yaxis_title="Gross Profit ($)"
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
+with col_f2:
+    st.markdown("### ⏱️ Warehouse Dispatch vs. Transit Time")
+    fig_lead_comp = px.bar(
+        factory_summary.sort_values("Avg_Total_Lead", ascending=True),
+        x="Factory",
+        y=["Dispatch Delay (D)", "Transit Duration (D)"],
+        barmode="stack",
+        color_discrete_sequence=[COLORS["secondary"], COLORS["accent_warm"]],
+        text_auto=".1f",
+        template="plotly_white"
+    )
+    fig_lead_comp.update_layout(height=400, yaxis_title="Average Days", xaxis_title="Factory")
+    st.plotly_chart(fig_lead_comp, use_container_width=True)
 
 st.markdown("---")
 
-st.subheader("🚚 Average Lead Time")
+# =====================================================
+# FACTORY NETWORK MAP WITH DISPATCH RADIUS
+# =====================================================
 
-fig = px.bar(
-    factory_summary,
-    x="Factory",
-    y="Avg_Lead_Time",
-    color="Avg_Lead_Time",
-    text_auto=".2f",
-    template="plotly_dark"
-)
+st.markdown("### 🗺️ Facility Geographic Network & Outbound Footprint")
 
-fig.update_layout(
-    height=500,
-    title="🚚 Average Lead Time by Factory",
-    title_x=0.5,
-    xaxis_title="Factory",
-    yaxis_title="Lead Time (Days)"
-)
-st.plotly_chart(fig, use_container_width=True)
+fac_map = folium.Map(location=[39.5, -98.35], zoom_start=4, tiles="CartoDB Positron")
 
+fac_coords = filtered[[
+    "Factory", "Factory Latitude", "Factory Longitude"
+]].drop_duplicates()
 
-st.markdown("---")
+for _, row in fac_coords.iterrows():
+    f_name = row["Factory"]
+    sub = filtered[filtered["Factory"] == f_name]
+    f_orders = len(sub)
+    f_sales = sub["Sales"].sum()
+    f_dispatch = sub["Fulfillment Days"].mean()
+    f_reach = sub["Distance Miles"].mean()
 
-st.subheader("🗺 Factory Locations")
-
-factory_map = folium.Map(
-    location=[39,-98],
-    zoom_start=4,
-    tiles="CartoDB Positron"
-)
-
-locations = filtered[
-    [
-        "Factory",
-        "Factory Latitude",
-        "Factory Longitude"
-    ]
-].drop_duplicates()
-
-for _,row in locations.iterrows():
+    popup_text = f"""
+    <b>{f_name}</b><br>
+    Orders: {f_orders:,}<br>
+    Revenue: ${f_sales:,.0f}<br>
+    Avg Dispatch: {f_dispatch:.1f} days<br>
+    Avg Reach: {f_reach:,.0f} miles
+    """
 
     folium.CircleMarker(
-    location=[
-        row["Factory Latitude"],
-        row["Factory Longitude"]
-    ],
-    radius=10,
-    tooltip=row["Factory"],
-    popup=f"""
-    <b>{row['Factory']}</b><br>
-    Factory Location
-    """,
-    color="darkblue",
-    fill=True,
-    fill_color="cyan",
-    fill_opacity=0.9
-).add_to(factory_map)
-st_folium(factory_map,height=600,width=None)
+        location=[row["Factory Latitude"], row["Factory Longitude"]],
+        radius=11,
+        popup=popup_text,
+        tooltip=f_name,
+        color="#1E3A8A",
+        fill=True,
+        fill_color="#2563EB",
+        fill_opacity=0.85
+    ).add_to(fac_map)
 
+st_folium(fac_map, height=450, width=None)
 
 st.markdown("---")
 
-best_factory = (
-    factory_summary.sort_values(
-        "Sales",
-        ascending=False
-    ).iloc[0]
-)
+# =====================================================
+# MEANINGFUL OPERATIONAL GAUGE: FULFILLMENT SLA COMPLIANCE
+# =====================================================
 
-st.success(f"""
-## 🏆 Best Performing Factory
+col_g1, col_g2 = st.columns([1, 2])
 
-**Factory:** {best_factory['Factory']}
+with col_g1:
+    st.markdown("### 🎯 Plant SLA Compliance")
+    fig_fac_gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=round(plant_on_time_pct, 1),
+        number={"suffix": "%"},
+        title={"text": "Plant On-Time Fulfillment"},
+        gauge={
+            "axis": {"range": [0, 100]},
+            "bar": {"color": COLORS["primary"]},
+            "steps": [
+                {"range": [0, 60], "color": "#FEE2E2"},
+                {"range": [60, 85], "color": "#FEF3C7"},
+                {"range": [85, 100], "color": "#DCFCE7"}
+            ],
+            "threshold": {
+                "line": {"color": "#15803D", "width": 3},
+                "thickness": 0.75,
+                "value": 85.0
+            }
+        }
+    ))
+    fig_fac_gauge.update_layout(
+        template="plotly_white",
+        height=320,
+        margin=dict(l=20, r=20, t=30, b=20)
+    )
+    st.plotly_chart(fig_fac_gauge, use_container_width=True)
 
-**Sales:** ${best_factory['Sales']:,.0f}
+with col_g2:
+    st.markdown("### 💡 Plant Operational Diagnostics")
+    if not factory_summary.empty:
+        best_vol_fac = factory_summary.loc[factory_summary["Orders"].idxmax()]
+        fastest_disp_fac = factory_summary.loc[factory_summary["Avg_Fulfillment_Days"].idxmin()]
+        slowest_disp_fac = factory_summary.loc[factory_summary["Avg_Fulfillment_Days"].idxmax()]
 
-**Profit:** ${best_factory['Profit']:,.0f}
+        st.success(f"""
+        **Highest Throughput Plant:** `{best_vol_fac['Factory']}`
+        * Produced **{best_vol_fac['Orders']:,} orders** (${best_vol_fac['Sales']:,.0f} revenue) with **{best_vol_fac['Margin %']:.1f}% gross margin**.
+        """)
+        st.info(f"""
+        **Fastest Dispatch Facility:** `{fastest_disp_fac['Factory']}`
+        * Averages **{fastest_disp_fac['Avg_Fulfillment_Days']:.1f} days** order-to-ship handling time.
+        """)
+        if slowest_disp_fac['Factory'] != fastest_disp_fac['Factory']:
+            st.warning(f"""
+            **Dispatch Bottleneck:** `{slowest_disp_fac['Factory']}`
+            * Averages **{slowest_disp_fac['Avg_Fulfillment_Days']:.1f} days** dispatch delay. Recommend order picking and staging audit.
+            """)
 
-**Average Lead Time:** {best_factory['Avg_Lead_Time']:.2f} Days
-""")
-
-
+# Export Factory Report
 st.markdown("---")
-
-st.markdown("---")
-
-st.subheader("💡 Executive Factory Insights")
-
-highest_profit = factory_summary.loc[
-    factory_summary["Profit"].idxmax(),
-    "Factory"
-]
-
-fastest_factory = factory_summary.loc[
-    factory_summary["Avg_Lead_Time"].idxmin(),
-    "Factory"
-]
-
-highest_orders = factory_summary.loc[
-    factory_summary["Orders"].idxmax(),
-    "Factory"
-]
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-    st.success(f"""
-### 🏭 Highest Profit
-
-**{highest_profit}**
-""")
-
-with c2:
-    st.info(f"""
-### 🚚 Fastest Factory
-
-**{fastest_factory}**
-""")
-
-with c3:
-    st.warning(f"""
-### 📦 Highest Orders
-
-**{highest_orders}**
-""")
-    
-
-st.markdown("---")
-st.subheader("🎯 Factory Performance Score")
-
-score = min((profit / df["Gross Profit"].sum()) * 100, 100)
-
-fig = go.Figure(go.Indicator(
-    mode="gauge+number",
-    value=score,
-    number={"suffix": "%"},
-    title={"text": "Overall Factory Performance"},
-    gauge={
-        "axis": {"range": [0, 100]},
-        "bar": {"color": "#00E5FF"},
-        "steps": [
-            {"range": [0, 40], "color": "#ef4444"},
-            {"range": [40, 70], "color": "#f59e0b"},
-            {"range": [70, 100], "color": "#22c55e"}
-        ]
-    }
-))
-
-fig.update_layout(height=420)
-
-st.plotly_chart(fig, use_container_width=True)
-
-csv = factory_summary.to_csv(index=False)
-
+fac_csv = factory_summary.to_csv(index=False)
 st.download_button(
-    "⬇ Download Factory Report",
-    csv,
-    "Factory_Report.csv",
+    "📥 Download Factory Performance Report (CSV)",
+    fac_csv,
+    "nassau_candy_factory_summary.csv",
     "text/csv"
 )
-
-

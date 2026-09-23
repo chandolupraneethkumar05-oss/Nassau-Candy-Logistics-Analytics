@@ -1,28 +1,26 @@
 import streamlit as st
 
-
 # ============================================================
 # PAGE CONFIGURATION
 # ============================================================
 
 st.set_page_config(
-    page_title="Nassau Candy Analytics",
+    page_title="Nassau Candy Logistics Analytics",
     page_icon="🍬",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 
 # ============================================================
 # MULTIPAGE NAVIGATION
 # ============================================================
 
 pages = {
-    "Dashboard": [
+    "Overview": [
         st.Page(
             "pages/Home.py",
-            title="Home",
-            icon="🏠",
+            title="Executive Portal",
+            icon="🏢",
             default=True
         ),
         st.Page(
@@ -32,33 +30,37 @@ pages = {
         ),
     ],
 
-    "Analytics": [
-        st.Page(
-            "pages/Sales_Analytics.py",
-            title="Sales Analytics",
-            icon="💰"
-        ),
+    "Operational Analytics": [
         st.Page(
             "pages/Route_Analytics.py",
-            title="Route Analytics",
+            title="Route Efficiency",
             icon="🚚"
         ),
         st.Page(
             "pages/Factory_Analytics.py",
-            title="Factory Analytics",
+            title="Factory Performance",
             icon="🏭"
+        ),
+        st.Page(
+            "pages/Sales_Analytics.py",
+            title="Commercial & Sales",
+            icon="💰"
         ),
     ],
 
-    "Insights": [
+    "Intelligence & ML": [
+        st.Page(
+            "pages/Predictive_Analytics.py",
+            title="Predictive Lead Time (ML)",
+            icon="🔮"
+        ),
         st.Page(
             "pages/Business_Insights.py",
-            title="Business Insights",
+            title="Strategic Insights",
             icon="💡"
         ),
     ],
 }
-
 
 # ============================================================
 # RUN NAVIGATION

@@ -1,142 +1,59 @@
+"""
+Nassau Candy Logistics Analytics - Route & Performance Analysis Script
+Processes the cleaned shipment dataset, computes the standardized Route Efficiency Index (REI),
+identifies high-performing and bottleneck corridors, and exports summary reports.
+"""
+
 import os
+import sys
 import pandas as pd
 
-# ======================================================
-# LOAD DATASET
-# ======================================================
+# Add project root to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-df = pd.read_csv("data/Nassau Candy Distributor.csv")
+from src.data_loader import load_clean_data
+from src.logistics import calculate_route_summary
 
-# ======================================================
-# DATE CONVERSION
-# ======================================================
 
-df["Order Date"] = pd.to_datetime(df["Order Date"], dayfirst=True, errors="coerce")
-df["Ship Date"] = pd.to_datetime(df["Ship Date"], dayfirst=True, errors="coerce")
+def run_logistics_analysis():
+    print("=" * 60)
+    print("Nassau Candy Distributor - Route Efficiency & Performance Analysis")
+    print("=" * 60)
 
-# ======================================================
-# CREATE LEAD TIME
-# ======================================================
+    # 1. Load Cleaned Dataset
+    df = load_clean_data("data/cleaned_dataset.csv")
+    print(f"Loaded cleaned dataset with {len(df):,} records.")
 
-df["Lead Time"] = (df["Ship Date"] - df["Order Date"]).dt.days
+    # 2. Compute Route Summary using standardized REI
+    route_summary = calculate_route_summary(df, min_shipments=5)
+    print(f"Aggregated {len(route_summary):,} distinct factory-to-destination routes.")
 
-# ======================================================
-# PRODUCT -> FACTORY
-# ======================================================
+    # 3. Filter for statistically reliable routes (N >= 5 shipments)
+    reliable_routes = route_summary[route_summary["Is_Reliable"]].copy()
+    print(f"Statistically reliable routes (N >= 5 shipments): {len(reliable_routes):,}")
 
-factory_map = {
+    # 4. Top 10 and Bottom 10 Routes by Route Efficiency Index
+    top10 = reliable_routes.sort_values("Efficiency Score", ascending=False).head(10)
+    bottom10 = reliable_routes.sort_values("Efficiency Score", ascending=True).head(10)
 
-"Wonka Bar - Nutty Crunch Surprise":"Lot's O' Nuts",
-"Wonka Bar - Fudge Mallows":"Lot's O' Nuts",
-"Wonka Bar -Scrumdiddlyumptious":"Lot's O' Nuts",
-"Wonka Bar - Milk Chocolate":"Wicked Choccy's",
-"Wonka Bar - Triple Dazzle Caramel":"Wicked Choccy's",
-"Laffy Taffy":"Sugar Shack",
-"SweeTARTS":"Sugar Shack",
-"Nerds":"Sugar Shack",
-"Fun Dip":"Sugar Shack",
-"Fizzy Lifting Drinks":"Sugar Shack",
-"Everlasting Gobstopper":"Secret Factory",
-"Hair Toffee":"The Other Factory",
-"Lickable Wallpaper":"Secret Factory",
-"Wonka Gum":"Secret Factory",
-"Kazookles":"The Other Factory"
+    # 5. Export results
+    os.makedirs("output", exist_ok=True)
+    route_summary.to_csv("output/route_summary.csv", index=False)
+    top10.to_csv("output/top10_routes.csv", index=False)
+    bottom10.to_csv("output/bottom10_routes.csv", index=False)
 
-}
+    print("\n--- Top 5 Most Efficient Routes (REI Score) ---")
+    print(top10[["Route", "Shipments", "Avg_Distance_Miles", "Avg_Total_Lead_Time", "Profit_Margin_Pct", "Efficiency Score"]].head(5).to_string(index=False))
 
-df["Factory"] = df["Product Name"].map(factory_map)
+    print("\n--- Bottom 5 Routes Requiring Attention ---")
+    print(bottom10[["Route", "Shipments", "Avg_Distance_Miles", "Avg_Total_Lead_Time", "Profit_Margin_Pct", "Efficiency Score"]].head(5).to_string(index=False))
 
-# ======================================================
-# CREATE ROUTE
-# ======================================================
+    print("\nReports successfully saved in output/ directory:")
+    print(" - output/route_summary.csv")
+    print(" - output/top10_routes.csv")
+    print(" - output/bottom10_routes.csv")
+    print("=" * 60)
 
-df["Route"] = df["Factory"] + " → " + df["State/Province"]
 
-# ======================================================
-# ROUTE SUMMARY
-# ======================================================
-
-route_summary = (
-
-    df.groupby("Route")
-      .agg(
-          Total_Shipments=("Order ID", "count"),
-          Average_Lead_Time=("Lead Time", "mean"),
-          Lead_Time_STD=("Lead Time", "std"),
-          Total_Sales=("Sales", "sum"),
-          Total_Gross_Profit=("Gross Profit", "sum")
-      )
-      .reset_index()
-
-)
-
-# ======================================================
-# ROUTE EFFICIENCY SCORE
-# ======================================================
-
-max_lead = route_summary["Average_Lead_Time"].max()
-
-route_summary["Efficiency Score"] = (
-    100 -
-    (
-        route_summary["Average_Lead_Time"] / max_lead
-    ) * 100
-)
-
-# ======================================================
-# TOP & BOTTOM ROUTES
-# ======================================================
-
-top10 = route_summary.sort_values(
-    "Efficiency Score",
-    ascending=False
-).head(10)
-
-bottom10 = route_summary.sort_values(
-    "Efficiency Score"
-).head(10)
-
-# ======================================================
-# SAVE FILES
-# ======================================================
-
-os.makedirs("output", exist_ok=True)
-
-route_summary.to_csv(
-    "output/route_summary.csv",
-    index=False
-)
-
-top10.to_csv(
-    "output/top10_routes.csv",
-    index=False
-)
-
-bottom10.to_csv(
-    "output/bottom10_routes.csv",
-    index=False
-)
-
-# ======================================================
-# PRINT RESULTS
-# ======================================================
-
-print("\n==============================")
-print("Total Routes")
-print("==============================")
-print(route_summary.shape[0])
-
-print("\n==============================")
-print("Top 10 Routes")
-print("==============================")
-print(top10)
-
-print("\n==============================")
-print("Bottom 10 Routes")
-print("==============================")
-print(bottom10)
-
-print("\nFiles Created Successfully")
-print("route_summary.csv")
-print("top10_routes.csv")
-print("bottom10_routes.csv")
+if __name__ == "__main__":
+    run_logistics_analysis()
