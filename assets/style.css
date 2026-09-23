@@ -1,107 +1,51 @@
-/* Nassau Candy Logistics Analytics - Natural Corporate Style */
+/* Nassau Candy Logistics Analytics - High-Contrast Natural Corporate Style */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-html, body, [class*="css"], [class*="st-"] {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+html, body, .stApp {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
 }
 
-.stApp {
-    background-color: #F8FAFC;
-    color: #0F172A;
-}
-
-/* Header Container */
-.executive-header {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 24px 30px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-}
-
-.executive-header h1 {
-    font-size: 26px;
-    font-weight: 800;
-    color: #1E3A8A;
-    margin: 0;
-    letter-spacing: -0.02em;
-}
-
-.executive-header p {
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] span,
+[data-testid="stMarkdownContainer"] li,
+p, span, label, li {
+    color: #1E293B !important;
     font-size: 14px;
-    color: #64748B;
-    margin: 6px 0 0 0;
+    line-height: 1.6;
 }
 
-/* Card Styling */
-.card-container {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.card-container:hover {
-    border-color: #CBD5E1;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-}
-
-.card-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #64748B;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 10px;
-}
-
-/* Clean Alert Boxes */
-.alert-box {
-    border-radius: 8px;
-    padding: 14px 18px;
-    margin: 12px 0;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-.alert-box.success {
-    background-color: #F0FDF4;
-    border-left: 4px solid #15803D;
-    color: #14532D;
-}
-
-.alert-box.warning {
-    background-color: #FFFBEB;
-    border-left: 4px solid #D97706;
-    color: #78350F;
-}
-
-.alert-box.info {
-    background-color: #EFF6FF;
-    border-left: 4px solid #2563EB;
-    color: #1E3A8A;
-}
-
-.alert-box.danger {
-    background-color: #FEF2F2;
-    border-left: 4px solid #B91C1C;
-    color: #7F1D1D;
-}
-
-/* Streamlit Component Adjustments */
-section[data-testid="stSidebar"] {
-    background-color: #FFFFFF !important;
-    border-right: 1px solid #E2E8F0;
+h1, h2, h3, h4, h5, h6,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3 {
+    color: #0F172A !important;
+    font-weight: 800 !important;
 }
 
 div[data-testid="stMetric"] {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    padding: 14px 18px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 10px !important;
+    padding: 16px 20px !important;
+}
+
+div[data-testid="stMetricLabel"] * {
+    color: #475569 !important;
+    font-weight: 700 !important;
+}
+
+div[data-testid="stMetricValue"] * {
+    color: #0F172A !important;
+    font-weight: 800 !important;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #CBD5E1 !important;
+}
+
+section[data-testid="stSidebar"] * {
+    color: #0F172A !important;
 }

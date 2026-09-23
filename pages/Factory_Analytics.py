@@ -156,13 +156,24 @@ with col_f2:
     fig_lead_comp = px.bar(
         factory_summary.sort_values("Avg_Total_Lead", ascending=True),
         x="Factory",
-        y=["Dispatch Delay (D)", "Transit Duration (D)"],
+        y=["Avg_Fulfillment_Days", "Avg_Transit_Days"],
         barmode="stack",
         color_discrete_sequence=[COLORS["secondary"], COLORS["accent_warm"]],
         text_auto=".1f",
-        template="plotly_white"
+        template="plotly_white",
+        labels={"value": "Average Days", "variable": "Component"}
     )
-    fig_lead_comp.update_layout(height=400, yaxis_title="Average Days", xaxis_title="Factory")
+    legend_labels = {
+        "Avg_Fulfillment_Days": "Dispatch Handling Delay (Days)",
+        "Avg_Transit_Days": "Carrier Transit Duration (Days)"
+    }
+    fig_lead_comp.for_each_trace(lambda t: t.update(name=legend_labels.get(t.name, t.name)))
+    fig_lead_comp.update_layout(
+        height=400,
+        yaxis_title="Average Days",
+        xaxis_title="Factory",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
     st.plotly_chart(fig_lead_comp, use_container_width=True)
 
 st.markdown("---")
