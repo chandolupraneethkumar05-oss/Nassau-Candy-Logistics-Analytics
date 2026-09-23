@@ -209,14 +209,14 @@ def configure_plotly_theme():
             gridcolor="#F1F5F9",
             linecolor="#CBD5E1",
             tickfont=dict(color="#475569", size=11),
-            titlefont=dict(color="#0F172A", size=12, weight=600)
+            title=dict(font=dict(color="#0F172A", size=12))
         ),
         yaxis=dict(
             showgrid=True,
             gridcolor="#F1F5F9",
             linecolor="#CBD5E1",
             tickfont=dict(color="#475569", size=11),
-            titlefont=dict(color="#0F172A", size=12, weight=600)
+            title=dict(font=dict(color="#0F172A", size=12))
         ),
         hoverlabel=dict(
             bgcolor="#1E293B",
